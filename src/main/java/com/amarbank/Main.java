@@ -10,7 +10,7 @@ import javax.swing.UIManager;
  */
 public class Main {
 
-    public static void main(String[] args) {
+    static void main() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ignored) {
