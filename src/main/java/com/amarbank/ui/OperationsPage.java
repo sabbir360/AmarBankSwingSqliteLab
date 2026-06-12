@@ -127,6 +127,7 @@ public class OperationsPage extends JFrame {
             if (confirmOperation("Deposit", account, null)) {
                 bank.deposit(account.getAccountNumber(), amount());
                 MessageDialogs.info(this, "Deposit successful.");
+                clearForm();
             }
         } catch (AccountNotFoundException ex) {
             MessageDialogs.error(this, ex.getMessage());
@@ -142,6 +143,7 @@ public class OperationsPage extends JFrame {
             if (confirmOperation("Withdrawal", account, null)) {
                 bank.withdraw(account.getAccountNumber(), amount());
                 MessageDialogs.info(this, "Withdrawal successful.");
+                clearForm();
             }
         } catch (InsufficientFundsException | AccountNotFoundException ex) {
             MessageDialogs.error(this, ex.getMessage());
@@ -167,6 +169,7 @@ public class OperationsPage extends JFrame {
             if (confirmOperation("Transfer", source, target)) {
                 bank.transfer(source.getAccountNumber(), target.getAccountNumber(), amount());
                 MessageDialogs.info(this, "Transfer successful.");
+                clearForm();
             }
         } catch (InsufficientFundsException | AccountNotFoundException ex) {
             MessageDialogs.error(this, ex.getMessage());
@@ -205,6 +208,12 @@ public class OperationsPage extends JFrame {
 
     private double amount() {
         return Double.parseDouble(amountField.getText().trim());
+    }
+
+    private void clearForm() {
+        accountField.setText("");
+        amountField.setText("");
+        destinationField.setText("");
     }
 
 }
