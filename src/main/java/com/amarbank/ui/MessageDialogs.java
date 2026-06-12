@@ -15,9 +15,16 @@ public final class MessageDialogs {
     public static final String TITLE_LOGIN_FAILED = "Login Failed";
     public static final String TITLE_NOT_FOUND = "Not Found";
     public static final String TITLE_ACCOUNT_DETAILS = "Account Details";
+    public static final String TITLE_CONFIRM_TRANSACTION = "Confirm Transaction";
 
     private MessageDialogs() {
 
+    }
+
+    public static boolean confirm(Component parent, String message) {
+        int result = JOptionPane.showConfirmDialog(parent, message, TITLE_CONFIRM_TRANSACTION,
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+        return result == JOptionPane.OK_OPTION;
     }
 
     public static void info(Component parent, String message) {

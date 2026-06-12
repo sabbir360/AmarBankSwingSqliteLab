@@ -144,3 +144,4 @@ replay_pid*
 
 db_file
 lib
+/identifier.sqlite
