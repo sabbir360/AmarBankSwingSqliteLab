@@ -7,17 +7,12 @@ import com.amarbank.model.SavingsAccount;
 import com.amarbank.service.BankManagement;
 import com.amarbank.util.Validators;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 /**
  * Feature 6: Savings interest and current-account overdraft utilities.
@@ -42,19 +37,9 @@ public class SpecialFeaturesPage extends JFrame {
     }
 
     private JPanel buildForm() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(6, 6, 6, 6);
-        c.fill = GridBagConstraints.HORIZONTAL;
-
-        c.gridx = 0;
-        c.gridy = 0;
-        panel.add(new JLabel("Account Number:"), c);
-        c.gridx = 1;
-        panel.add(accountField, c);
-
-        return panel;
+        FormLayouts.Form form = FormLayouts.create(12, 16, 12, 16);
+        form.addRow(0, "Account Number:", accountField);
+        return form.panel();
     }
 
     private JPanel buildButtons() {

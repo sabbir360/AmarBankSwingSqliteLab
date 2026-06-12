@@ -13,9 +13,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 
 /**
  * Login window. Validates input with {@link Validators}, checks the
@@ -49,23 +46,10 @@ public class LoginPage extends JFrame {
     }
 
     private JPanel buildForm() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(8, 24, 8, 24));
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(6, 6, 6, 6);
-        c.fill = GridBagConstraints.HORIZONTAL;
-
-        c.gridx = 0; c.gridy = 0;
-        panel.add(new JLabel("Username:"), c);
-        c.gridx = 1;
-        panel.add(usernameField, c);
-
-        c.gridx = 0; c.gridy = 1;
-        panel.add(new JLabel("Password:"), c);
-        c.gridx = 1;
-        panel.add(passwordField, c);
-
-        return panel;
+        FormLayouts.Form form = FormLayouts.create(8, 24, 8, 24);
+        form.addRow(0, "Username:", usernameField);
+        form.addRow(1, "Password:", passwordField);
+        return form.panel();
     }
 
     private JPanel buildButtons() {

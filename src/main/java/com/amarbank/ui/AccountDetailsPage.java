@@ -76,7 +76,7 @@ public class AccountDetailsPage extends JFrame {
         String number = accountField.getText().trim();
         if (!Validators.isValidAccountNumber(number)) {
             JOptionPane.showMessageDialog(this,
-                    "Enter a valid account number (e.g. AB000001).",
+                    "Enter a valid account number (e.g. AS001).",
                     "Invalid Input", JOptionPane.WARNING_MESSAGE);
             return;
         }
