@@ -12,7 +12,8 @@ public final class Validators {
     public static final String AMOUNT_REGEX = "^\\d+(\\.\\d{1,2})?$";
     public static final String USERNAME_REGEX = "^[A-Za-z0-9_]{3,20}$";
     public static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d).{6,}$";
-    public static final String ACCOUNT_NUMBER_REGEX = "^AB\\d{6}$";
+
+    public static final String ACCOUNT_NUMBER_REGEX = "^(?:AS|AC)\\d{4}$";
 
     private static final Pattern NAME = Pattern.compile(NAME_REGEX);
     private static final Pattern AMOUNT = Pattern.compile(AMOUNT_REGEX);

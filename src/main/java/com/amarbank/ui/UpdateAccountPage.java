@@ -4,16 +4,17 @@ import com.amarbank.exception.AccountNotFoundException;
 import com.amarbank.model.Account;
 import com.amarbank.model.SavingsAccount;
 import com.amarbank.service.BankManagement;
+import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Feature 7: Update Account. Load an existing account by number, then edit
@@ -49,7 +50,7 @@ public class UpdateAccountPage extends JFrame {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(8, 16, 0, 16));
         JButton loadButton = new JButton("Load");
-        loadButton.addActionListener(e -> loadAccount());
+        loadButton.addActionListener(this::onLoadAccount);
         panel.add(new JLabel("Account Number:"));
         panel.add(accountField);
         panel.add(loadButton);
@@ -69,17 +70,29 @@ public class UpdateAccountPage extends JFrame {
         JPanel panel = new JPanel();
         JButton saveButton = new JButton("Save Changes");
         JButton backButton = new JButton("Back");
-        saveButton.addActionListener(e -> save());
-        backButton.addActionListener(e -> dispose());
+        saveButton.addActionListener(this::onSave);
+        backButton.addActionListener(this::onBack);
         panel.add(saveButton);
         panel.add(backButton);
         return panel;
     }
 
+    private void onLoadAccount(ActionEvent event) {
+        loadAccount();
+    }
+
+    private void onSave(ActionEvent event) {
+        save();
+    }
+
+    private void onBack(ActionEvent event) {
+        dispose();
+    }
+
     private void loadAccount() {
         String number = accountField.getText().trim();
         if (!Validators.isValidAccountNumber(number)) {
-            warn("Enter a valid account number (e.g. AB000001).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
         try {
@@ -96,13 +109,13 @@ public class UpdateAccountPage extends JFrame {
         } catch (AccountNotFoundException ex) {
             loadedAccount = null;
             clearForm();
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         }
     }
 
     private void save() {
         if (loadedAccount == null) {
-            warn("Load an account first.");
+            MessageDialogs.warn(this, ValidationMessages.LOAD_ACCOUNT_FIRST);
             return;
         }
 
@@ -110,13 +123,12 @@ public class UpdateAccountPage extends JFrame {
         String special = specialField.getText().trim();
 
         if (!Validators.isValidName(name)) {
-            warn("Enter a valid holder name (letters, spaces, dots).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_HOLDER_NAME);
             return;
         }
         if (!Validators.isValidAmount(special)) {
-            warn(loadedAccount instanceof SavingsAccount
-                    ? "Enter a valid interest rate."
-                    : "Enter a valid overdraft limit.");
+            MessageDialogs.warn(this, ValidationMessages.invalidSpecialAttribute(
+                    loadedAccount instanceof SavingsAccount));
             return;
         }
 
@@ -126,11 +138,11 @@ public class UpdateAccountPage extends JFrame {
             loadedAccount = updated;
             nameField.setText(updated.getAccountHolderName());
             specialField.setText(String.format("%.2f", updated.getSpecialAttribute()));
-            info("Account updated.\n\n" + updated);
+            MessageDialogs.info(this, "Account updated.\n\n" + updated);
         } catch (AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            warn(ex.getMessage());
+            MessageDialogs.warn(this, ex.getMessage());
         }
     }
 
@@ -140,17 +152,5 @@ public class UpdateAccountPage extends JFrame {
         nameField.setText("");
         specialField.setText("");
         specialLabel.setText("Interest Rate (%):");
-    }
-
-    private void info(String message) {
-        JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void warn(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.WARNING_MESSAGE);
-    }
-
-    private void error(String message) {
-        JOptionPane.showMessageDialog(this, message, "Operation Failed", JOptionPane.ERROR_MESSAGE);
     }
 }

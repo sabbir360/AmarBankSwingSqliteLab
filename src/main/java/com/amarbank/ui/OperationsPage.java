@@ -3,14 +3,15 @@ package com.amarbank.ui;
 import com.amarbank.exception.AccountNotFoundException;
 import com.amarbank.exception.InsufficientFundsException;
 import com.amarbank.service.BankManagement;
+import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Features 2-4: Deposit, Withdraw, Transfer. Shares an account-number and
@@ -51,15 +52,31 @@ public class OperationsPage extends JFrame {
         JButton withdrawButton = new JButton("Withdraw");
         JButton transferButton = new JButton("Transfer");
         JButton backButton = new JButton("Back");
-        depositButton.addActionListener(e -> deposit());
-        withdrawButton.addActionListener(e -> withdraw());
-        transferButton.addActionListener(e -> transfer());
-        backButton.addActionListener(e -> dispose());
+        depositButton.addActionListener(this::onDeposit);
+        withdrawButton.addActionListener(this::onWithdraw);
+        transferButton.addActionListener(this::onTransfer);
+        backButton.addActionListener(this::onBack);
         panel.add(depositButton);
         panel.add(withdrawButton);
         panel.add(transferButton);
         panel.add(backButton);
         return panel;
+    }
+
+    private void onDeposit(ActionEvent event) {
+        deposit();
+    }
+
+    private void onWithdraw(ActionEvent event) {
+        withdraw();
+    }
+
+    private void onTransfer(ActionEvent event) {
+        transfer();
+    }
+
+    private void onBack(ActionEvent event) {
+        dispose();
     }
 
     private void deposit() {
@@ -68,9 +85,9 @@ public class OperationsPage extends JFrame {
         }
         try {
             bank.deposit(accountField.getText().trim(), amount());
-            info("Deposit successful.");
+            MessageDialogs.info(this, "Deposit successful.");
         } catch (AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         }
     }
 
@@ -80,9 +97,9 @@ public class OperationsPage extends JFrame {
         }
         try {
             bank.withdraw(accountField.getText().trim(), amount());
-            info("Withdrawal successful.");
+            MessageDialogs.info(this, "Withdrawal successful.");
         } catch (InsufficientFundsException | AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         }
     }
 
@@ -92,26 +109,26 @@ public class OperationsPage extends JFrame {
         }
         String destination = destinationField.getText().trim();
         if (!Validators.isValidAccountNumber(destination)) {
-            warn("Enter a valid destination account number (e.g. AB000001).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_DESTINATION_ACCOUNT_NUMBER);
             return;
         }
         try {
             bank.transfer(accountField.getText().trim(), destination, amount());
-            info("Transfer successful.");
+            MessageDialogs.info(this, "Transfer successful.");
         } catch (InsufficientFundsException | AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            warn(ex.getMessage());
+            MessageDialogs.warn(this, ex.getMessage());
         }
     }
 
     private boolean validCommonInput() {
         if (!Validators.isValidAccountNumber(accountField.getText().trim())) {
-            warn("Enter a valid account number (e.g. AB000001).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return false;
         }
         if (!Validators.isValidAmount(amountField.getText().trim())) {
-            warn("Enter a valid amount.");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_AMOUNT);
             return false;
         }
         return true;
@@ -121,15 +138,4 @@ public class OperationsPage extends JFrame {
         return Double.parseDouble(amountField.getText().trim());
     }
 
-    private void info(String message) {
-        JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void warn(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.WARNING_MESSAGE);
-    }
-
-    private void error(String message) {
-        JOptionPane.showMessageDialog(this, message, "Operation Failed", JOptionPane.ERROR_MESSAGE);
-    }
 }

@@ -2,6 +2,7 @@ package com.amarbank.ui;
 
 import com.amarbank.model.Account;
 import com.amarbank.service.BankManagement;
+import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
 
 import javax.swing.BorderFactory;
@@ -9,12 +10,12 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Feature 1: Account Creation. Pick a type (Savings/Current), enter the holder
@@ -51,8 +52,8 @@ public class CreateAccountPage extends JFrame {
         ButtonGroup group = new ButtonGroup();
         group.add(savingsRadio);
         group.add(currentRadio);
-        savingsRadio.addActionListener(e -> specialLabel.setText("Interest Rate (%):"));
-        currentRadio.addActionListener(e -> specialLabel.setText("Overdraft Limit:"));
+        savingsRadio.addActionListener(this::onSavingsSelected);
+        currentRadio.addActionListener(this::onCurrentSelected);
         panel.add(savingsRadio);
         panel.add(currentRadio);
         return panel;
@@ -70,11 +71,27 @@ public class CreateAccountPage extends JFrame {
         JPanel panel = new JPanel();
         JButton createButton = new JButton("Create");
         JButton backButton = new JButton("Back");
-        createButton.addActionListener(e -> create());
-        backButton.addActionListener(e -> dispose());
+        createButton.addActionListener(this::onCreate);
+        backButton.addActionListener(this::onBack);
         panel.add(createButton);
         panel.add(backButton);
         return panel;
+    }
+
+    private void onSavingsSelected(ActionEvent event) {
+        specialLabel.setText("Interest Rate (%):");
+    }
+
+    private void onCurrentSelected(ActionEvent event) {
+        specialLabel.setText("Overdraft Limit:");
+    }
+
+    private void onCreate(ActionEvent event) {
+        create();
+    }
+
+    private void onBack(ActionEvent event) {
+        dispose();
     }
 
     private void create() {
@@ -83,17 +100,15 @@ public class CreateAccountPage extends JFrame {
         String special = specialField.getText().trim();
 
         if (!Validators.isValidName(name)) {
-            warn("Enter a valid holder name (letters, spaces, dots).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_HOLDER_NAME);
             return;
         }
         if (!Validators.isValidAmount(deposit)) {
-            warn("Enter a valid initial deposit amount.");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_INITIAL_DEPOSIT);
             return;
         }
         if (!Validators.isValidAmount(special)) {
-            warn(savingsRadio.isSelected()
-                    ? "Enter a valid interest rate."
-                    : "Enter a valid overdraft limit.");
+            MessageDialogs.warn(this, ValidationMessages.invalidSpecialAttribute(savingsRadio.isSelected()));
             return;
         }
 
@@ -101,13 +116,7 @@ public class CreateAccountPage extends JFrame {
         Account account = bank.createAccount(type, name,
                 Double.parseDouble(deposit), Double.parseDouble(special));
 
-        JOptionPane.showMessageDialog(this,
-                "Account created.\n\n" + account,
-                "Success", JOptionPane.INFORMATION_MESSAGE);
+        MessageDialogs.info(this, "Account created.\n\n" + account);
         dispose();
-    }
-
-    private void warn(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.WARNING_MESSAGE);
     }
 }

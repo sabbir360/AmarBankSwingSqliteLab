@@ -5,14 +5,15 @@ import com.amarbank.model.Account;
 import com.amarbank.model.CurrentAccount;
 import com.amarbank.model.SavingsAccount;
 import com.amarbank.service.BankManagement;
+import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Feature 6: Savings interest and current-account overdraft utilities.
@@ -49,10 +50,10 @@ public class SpecialFeaturesPage extends JFrame {
         JButton allInterestButton = new JButton("Interest All Savings");
         JButton backButton = new JButton("Back");
 
-        interestButton.addActionListener(e -> applyInterest());
-        limitButton.addActionListener(e -> showWithdrawalLimit());
-        allInterestButton.addActionListener(e -> applyInterestToAll());
-        backButton.addActionListener(e -> dispose());
+        interestButton.addActionListener(this::onApplyInterest);
+        limitButton.addActionListener(this::onShowWithdrawalLimit);
+        allInterestButton.addActionListener(this::onApplyInterestToAll);
+        backButton.addActionListener(this::onBack);
 
         panel.add(interestButton);
         panel.add(limitButton);
@@ -61,42 +62,58 @@ public class SpecialFeaturesPage extends JFrame {
         return panel;
     }
 
+    private void onApplyInterest(ActionEvent event) {
+        applyInterest();
+    }
+
+    private void onShowWithdrawalLimit(ActionEvent event) {
+        showWithdrawalLimit();
+    }
+
+    private void onApplyInterestToAll(ActionEvent event) {
+        applyInterestToAll();
+    }
+
+    private void onBack(ActionEvent event) {
+        dispose();
+    }
+
     private void applyInterest() {
         String number = accountField.getText().trim();
         if (!Validators.isValidAccountNumber(number)) {
-            warn("Enter a valid account number (e.g. AB000001).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
         try {
             Account account = bank.findAccount(number);
             if (!(account instanceof SavingsAccount)) {
-                warn("Monthly interest applies only to savings accounts.");
+                MessageDialogs.warn(this, ValidationMessages.SAVINGS_INTEREST_ONLY);
                 return;
             }
             double interest = bank.applyMonthlyInterest(number);
             if (interest <= 0) {
-                info("No interest credited (zero balance or zero rate).");
+                MessageDialogs.info(this, "No interest credited (zero balance or zero rate).");
             } else {
-                info(String.format(
+                MessageDialogs.info(this, String.format(
                         "Interest applied.%n%nCredited : %.2f%nNew balance : %.2f",
                         interest, account.getBalance()));
             }
         } catch (AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            warn(ex.getMessage());
+            MessageDialogs.warn(this, ex.getMessage());
         }
     }
 
     private void applyInterestToAll() {
         double total = bank.applyMonthlyInterestToAllSavings();
-        info(String.format("Total interest credited to all savings accounts: %.2f", total));
+        MessageDialogs.info(this, String.format("Total interest credited to all savings accounts: %.2f", total));
     }
 
     private void showWithdrawalLimit() {
         String number = accountField.getText().trim();
         if (!Validators.isValidAccountNumber(number)) {
-            warn("Enter a valid account number (e.g. AB000001).");
+            MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
         try {
@@ -118,21 +135,9 @@ public class SpecialFeaturesPage extends JFrame {
                         account.getBalance(), account.getSpecialAttribute(),
                         account.getWithdrawableAmount());
             }
-            info(message);
+            MessageDialogs.info(this, message);
         } catch (AccountNotFoundException ex) {
-            error(ex.getMessage());
+            MessageDialogs.error(this, ex.getMessage());
         }
-    }
-
-    private void info(String message) {
-        JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void warn(String message) {
-        JOptionPane.showMessageDialog(this, message, "Invalid Input", JOptionPane.WARNING_MESSAGE);
-    }
-
-    private void error(String message) {
-        JOptionPane.showMessageDialog(this, message, "Operation Failed", JOptionPane.ERROR_MESSAGE);
     }
 }

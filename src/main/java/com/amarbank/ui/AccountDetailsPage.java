@@ -3,6 +3,7 @@ package com.amarbank.ui;
 import com.amarbank.exception.AccountNotFoundException;
 import com.amarbank.model.Account;
 import com.amarbank.service.BankManagement;
+import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
 
 import javax.swing.BorderFactory;
@@ -16,6 +17,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Feature 5: Balance Check / Account Details. Look up one account by number,
@@ -54,7 +56,7 @@ public class AccountDetailsPage extends JFrame {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
         JButton searchButton = new JButton("Show Details");
-        searchButton.addActionListener(e -> showDetails());
+        searchButton.addActionListener(this::onShowDetails);
         panel.add(new JLabel("Account Number:"));
         panel.add(accountField);
         panel.add(searchButton);
@@ -65,28 +67,37 @@ public class AccountDetailsPage extends JFrame {
         JPanel panel = new JPanel();
         JButton refreshButton = new JButton("Refresh");
         JButton backButton = new JButton("Back");
-        refreshButton.addActionListener(e -> refresh());
-        backButton.addActionListener(e -> dispose());
+        refreshButton.addActionListener(this::onRefresh);
+        backButton.addActionListener(this::onBack);
         panel.add(refreshButton);
         panel.add(backButton);
         return panel;
     }
 
+    private void onShowDetails(ActionEvent event) {
+        showDetails();
+    }
+
+    private void onRefresh(ActionEvent event) {
+        refresh();
+    }
+
+    private void onBack(ActionEvent event) {
+        dispose();
+    }
+
     private void showDetails() {
         String number = accountField.getText().trim();
         if (!Validators.isValidAccountNumber(number)) {
-            JOptionPane.showMessageDialog(this,
-                    "Enter a valid account number (e.g. AS001).",
-                    "Invalid Input", JOptionPane.WARNING_MESSAGE);
+            MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
         try {
             Account account = bank.findAccount(number);
             JOptionPane.showMessageDialog(this, account.toString(),
-                    "Account Details", JOptionPane.INFORMATION_MESSAGE);
+                    MessageDialogs.TITLE_ACCOUNT_DETAILS, JOptionPane.INFORMATION_MESSAGE);
         } catch (AccountNotFoundException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(),
-                    "Not Found", JOptionPane.ERROR_MESSAGE);
+            MessageDialogs.notFound(this, ex.getMessage());
         }
     }
 

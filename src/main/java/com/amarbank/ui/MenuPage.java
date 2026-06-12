@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
 
 /**
  * Landing menu (the Swing version of the terminal menu loop). One button per
@@ -41,15 +42,12 @@ public class MenuPage extends JFrame {
         JButton specialButton = new JButton("Interest & Overdraft");
         JButton logoutButton = new JButton("Logout");
 
-        createButton.addActionListener(e -> new CreateAccountPage(bank).setVisible(true));
-        updateButton.addActionListener(e -> new UpdateAccountPage(bank).setVisible(true));
-        operationsButton.addActionListener(e -> new OperationsPage(bank).setVisible(true));
-        detailsButton.addActionListener(e -> new AccountDetailsPage(bank).setVisible(true));
-        specialButton.addActionListener(e -> new SpecialFeaturesPage(bank).setVisible(true));
-        logoutButton.addActionListener(e -> {
-            dispose();
-            new LoginPage().setVisible(true);
-        });
+        createButton.addActionListener(this::onOpenCreateAccount);
+        updateButton.addActionListener(this::onOpenUpdateAccount);
+        operationsButton.addActionListener(this::onOpenOperations);
+        detailsButton.addActionListener(this::onOpenAccountDetails);
+        specialButton.addActionListener(this::onOpenSpecialFeatures);
+        logoutButton.addActionListener(this::onLogout);
 
         buttons.add(createButton);
         buttons.add(updateButton);
@@ -58,5 +56,30 @@ public class MenuPage extends JFrame {
         buttons.add(specialButton);
         buttons.add(logoutButton);
         add(buttons, BorderLayout.CENTER);
+    }
+
+    private void onOpenCreateAccount(ActionEvent event) {
+        new CreateAccountPage(bank).setVisible(true);
+    }
+
+    private void onOpenUpdateAccount(ActionEvent event) {
+        new UpdateAccountPage(bank).setVisible(true);
+    }
+
+    private void onOpenOperations(ActionEvent event) {
+        new OperationsPage(bank).setVisible(true);
+    }
+
+    private void onOpenAccountDetails(ActionEvent event) {
+        new AccountDetailsPage(bank).setVisible(true);
+    }
+
+    private void onOpenSpecialFeatures(ActionEvent event) {
+        new SpecialFeaturesPage(bank).setVisible(true);
+    }
+
+    private void onLogout(ActionEvent event) {
+        dispose();
+        new LoginPage().setVisible(true);
     }
 }
