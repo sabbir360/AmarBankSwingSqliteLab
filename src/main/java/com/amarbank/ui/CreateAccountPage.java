@@ -99,24 +99,27 @@ public class CreateAccountPage extends JFrame {
         String deposit = depositField.getText().trim();
         String special = specialField.getText().trim();
 
-        if (!Validators.isValidName(name)) {
+        if (Validators.isInvalidName(name)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_HOLDER_NAME);
             return;
         }
-        if (!Validators.isValidAmount(deposit)) {
+        if (Validators.isInvalidAmount(deposit)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_INITIAL_DEPOSIT);
             return;
         }
-        if (!Validators.isValidAmount(special)) {
+        if (Validators.isInvalidAmount(special)) {
             MessageDialogs.warn(this, ValidationMessages.invalidSpecialAttribute(savingsRadio.isSelected()));
             return;
         }
 
         String type = savingsRadio.isSelected() ? "SAVINGS" : "CURRENT";
-        Account account = bank.createAccount(type, name,
-                Double.parseDouble(deposit), Double.parseDouble(special));
-
-        MessageDialogs.info(this, "Account created.\n\n" + account);
-        dispose();
+        try {
+            Account account = bank.createAccount(type, name,
+                    Double.parseDouble(deposit), Double.parseDouble(special));
+            MessageDialogs.info(this, "Account created.\n\n" + account);
+            dispose();
+        } catch (RuntimeException ex) {
+            MessageDialogs.error(this, ex.getMessage());
+        }
     }
 }

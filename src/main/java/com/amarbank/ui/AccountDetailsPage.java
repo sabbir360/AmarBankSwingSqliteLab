@@ -88,7 +88,7 @@ public class AccountDetailsPage extends JFrame {
 
     private void showDetails() {
         String number = accountField.getText().trim();
-        if (!Validators.isValidAccountNumber(number)) {
+        if (Validators.isInvalidAccountNumber(number)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }

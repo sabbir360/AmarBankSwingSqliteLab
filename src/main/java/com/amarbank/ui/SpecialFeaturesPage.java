@@ -80,7 +80,7 @@ public class SpecialFeaturesPage extends JFrame {
 
     private void applyInterest() {
         String number = accountField.getText().trim();
-        if (!Validators.isValidAccountNumber(number)) {
+        if (Validators.isInvalidAccountNumber(number)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
@@ -112,7 +112,7 @@ public class SpecialFeaturesPage extends JFrame {
 
     private void showWithdrawalLimit() {
         String number = accountField.getText().trim();
-        if (!Validators.isValidAccountNumber(number)) {
+        if (Validators.isInvalidAccountNumber(number)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }

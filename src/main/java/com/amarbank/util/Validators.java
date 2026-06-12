@@ -25,12 +25,12 @@ public final class Validators {
 
     }
 
-    public static boolean isValidName(String value) {
-        return value != null && NAME.matcher(value.trim()).matches();
+    public static boolean isInvalidName(String value) {
+        return value == null || !NAME.matcher(value.trim()).matches();
     }
 
-    public static boolean isValidAmount(String value) {
-        return value != null && AMOUNT.matcher(value.trim()).matches();
+    public static boolean isInvalidAmount(String value) {
+        return value == null || !AMOUNT.matcher(value.trim()).matches();
     }
 
     public static boolean isValidUsername(String value) {
@@ -41,7 +41,7 @@ public final class Validators {
         return value != null && PASSWORD.matcher(value).matches();
     }
 
-    public static boolean isValidAccountNumber(String value) {
-        return value != null && ACCOUNT_NUMBER.matcher(value.trim()).matches();
+    public static boolean isInvalidAccountNumber(String value) {
+        return value == null || !ACCOUNT_NUMBER.matcher(value.trim()).matches();
     }
 }

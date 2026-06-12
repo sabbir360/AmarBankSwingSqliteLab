@@ -31,10 +31,10 @@ public class BankManagement {
 
     /** Creates an account with an auto-generated number and persists it. */
     public Account createAccount(String type, String holderName, double initialDeposit, double special) {
-        String number = generateAccountNumber();
+        String number = generateAccountNumber(type);
         Account account = Account.create(type, number, holderName, initialDeposit, special);
-        accounts.add(account);
         db.insertAccount(account);
+        accounts.add(account);
         return account;
     }
 
@@ -108,15 +108,12 @@ public class BankManagement {
         return account;
     }
 
-    private String generateAccountNumber() {
+    private String generateAccountNumber(String type) {
+        String prefix = "SAVINGS".equalsIgnoreCase(type) ? "AS" : "AC";
         int max = 0;
-        String prefix = "AC";
         for (Account a : accounts) {
             String num = a.getAccountNumber();
-            if (a instanceof SavingsAccount){
-                prefix = "AS";
-            }
-            if (num != null && num.length() == 8 && num.startsWith(prefix)) {
+            if (num != null && num.length() == 6 && num.startsWith(prefix)) {
                 try {
                     max = Math.max(max, Integer.parseInt(num.substring(2)));
                 } catch (NumberFormatException ignored) {
@@ -125,6 +122,6 @@ public class BankManagement {
             }
         }
 
-        return String.format(prefix+"%04d", max + 1);
+        return String.format(prefix + "%04d", max + 1);
     }
 }

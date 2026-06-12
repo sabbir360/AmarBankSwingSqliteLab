@@ -91,7 +91,7 @@ public class UpdateAccountPage extends JFrame {
 
     private void loadAccount() {
         String number = accountField.getText().trim();
-        if (!Validators.isValidAccountNumber(number)) {
+        if (Validators.isInvalidAccountNumber(number)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
             return;
         }
@@ -122,11 +122,11 @@ public class UpdateAccountPage extends JFrame {
         String name = nameField.getText().trim();
         String special = specialField.getText().trim();
 
-        if (!Validators.isValidName(name)) {
+        if (Validators.isInvalidName(name)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_HOLDER_NAME);
             return;
         }
-        if (!Validators.isValidAmount(special)) {
+        if (Validators.isInvalidAmount(special)) {
             MessageDialogs.warn(this, ValidationMessages.invalidSpecialAttribute(
                     loadedAccount instanceof SavingsAccount));
             return;

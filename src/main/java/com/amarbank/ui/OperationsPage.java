@@ -16,7 +16,7 @@ import java.awt.event.ActionEvent;
 /**
  * Features 2-4: Deposit, Withdraw, Transfer. Shares an account-number and
  * amount field; Transfer also uses the destination field. All illegal
- * operations are caught and shown in a {@link JOptionPane}.
+ * operations are caught and shown in a {@link MessageDialogs} dialog.
  */
 public class OperationsPage extends JFrame {
 
@@ -80,7 +80,7 @@ public class OperationsPage extends JFrame {
     }
 
     private void deposit() {
-        if (!validCommonInput()) {
+        if (invalidCommonInput()) {
             return;
         }
         try {
@@ -92,7 +92,7 @@ public class OperationsPage extends JFrame {
     }
 
     private void withdraw() {
-        if (!validCommonInput()) {
+        if (invalidCommonInput()) {
             return;
         }
         try {
@@ -104,11 +104,11 @@ public class OperationsPage extends JFrame {
     }
 
     private void transfer() {
-        if (!validCommonInput()) {
+        if (invalidCommonInput()) {
             return;
         }
         String destination = destinationField.getText().trim();
-        if (!Validators.isValidAccountNumber(destination)) {
+        if (Validators.isInvalidAccountNumber(destination)) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_DESTINATION_ACCOUNT_NUMBER);
             return;
         }
@@ -122,16 +122,16 @@ public class OperationsPage extends JFrame {
         }
     }
 
-    private boolean validCommonInput() {
-        if (!Validators.isValidAccountNumber(accountField.getText().trim())) {
+    private boolean invalidCommonInput() {
+        if (Validators.isInvalidAccountNumber(accountField.getText().trim())) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_ACCOUNT_NUMBER);
-            return false;
+            return true;
         }
-        if (!Validators.isValidAmount(amountField.getText().trim())) {
+        if (Validators.isInvalidAmount(amountField.getText().trim())) {
             MessageDialogs.warn(this, ValidationMessages.INVALID_AMOUNT);
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     private double amount() {
