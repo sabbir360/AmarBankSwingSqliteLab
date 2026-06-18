@@ -13,6 +13,8 @@ public final class ValidationMessages {
     public static final String INVALID_DESTINATION_ACCOUNT_NUMBER =
             "Enter a valid destination account number (e.g. " + ACCOUNT_NUMBER_EXAMPLE + ").";
     public static final String INVALID_AMOUNT = "Enter a valid amount.";
+    public static final String INVALID_LOAN_AMOUNT = "Enter a valid loan amount.";
+    public static final String INVALID_REPAYMENT_AMOUNT = "Enter a valid repayment amount.";
     public static final String INVALID_INITIAL_DEPOSIT = "Enter a valid initial deposit amount.";
     public static final String INVALID_HOLDER_NAME =
             "Enter a valid holder name (letters, spaces, dots).";

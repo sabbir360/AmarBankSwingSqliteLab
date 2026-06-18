@@ -86,6 +86,23 @@ public class BankManagement {
         db.updateAccount(destination);
     }
 
+    /** Disburses a loan to an account and persists the new balance and loan amount. */
+    public double takeLoan(String accountNumber, double amount) throws AccountNotFoundException {
+        Account account = findAccount(accountNumber);
+        operations.takeLoan(account, amount);
+        db.updateAccount(account);
+        return account.getLoanBalance();
+    }
+
+    /** Repays part or all of an account's loan and persists the change. Returns the remaining loan. */
+    public double repayLoan(String accountNumber, double amount)
+            throws AccountNotFoundException, InsufficientFundsException {
+        Account account = findAccount(accountNumber);
+        operations.repayLoan(account, amount);
+        db.updateAccount(account);
+        return account.getLoanBalance();
+    }
+
     /** Applies monthly interest to one savings account and persists the new balance. */
     public double applyMonthlyInterest(String accountNumber) throws AccountNotFoundException {
         Account account = findAccount(accountNumber);

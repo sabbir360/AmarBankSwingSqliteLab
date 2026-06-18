@@ -7,9 +7,10 @@ package com.amarbank.model;
  */
 public abstract class Account {
 
-    private String accountNumber;
+    private final String accountNumber;
     private String accountHolderName;
     private double balance;
+    private double loanBalance;
     private String email = "";
     private String phoneNumber;
 
@@ -41,6 +42,15 @@ public abstract class Account {
 
     public void setBalance(double balance) {
         this.balance = balance;
+    }
+
+    /** Outstanding loan amount still owed by this account (zero when no active loan). */
+    public double getLoanBalance() {
+        return loanBalance;
+    }
+
+    public void setLoanBalance(double loanBalance) {
+        this.loanBalance = loanBalance;
     }
 
     public String getEmail() {
@@ -93,6 +103,7 @@ public abstract class Account {
                 getAccountType().equals("SAVINGS") ? "Interest Rate (%)" : "Overdraft Limit",
                 getSpecialAttribute()));
         sb.append(String.format("%nWithdrawable    : %.2f", getWithdrawableAmount()));
+        sb.append(String.format("%nLoan Balance    : %.2f", loanBalance));
         if (this instanceof CurrentAccount current) {
             sb.append(String.format("%nOverdraft Used  : %.2f%nOverdraft Left  : %.2f",
                     current.getOverdraftUsed(), current.getRemainingOverdraft()));

@@ -38,7 +38,10 @@ public class BankDatabase {
     }
 
     private Connection connect() throws SQLException {
-        new File(DB_DIR).mkdirs();
+        File dir = new File(DB_DIR);
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw new SQLException("Failed to create database directory: " + DB_DIR);
+        }
         return DriverManager.getConnection(DB_URL);
     }
 
@@ -49,7 +52,8 @@ public class BankDatabase {
                 + "type TEXT NOT NULL,"
                 + "holder_name TEXT NOT NULL,"
                 + "balance REAL NOT NULL,"
-                + "special REAL NOT NULL)";
+                + "special REAL NOT NULL,"
+                + "loan_balance REAL NOT NULL DEFAULT 0)";
         String users = "CREATE TABLE IF NOT EXISTS users ("
                 + "username TEXT PRIMARY KEY,"
                 + "password TEXT NOT NULL)";
@@ -57,11 +61,28 @@ public class BankDatabase {
              Statement stmt = conn.createStatement()) {
             stmt.execute(accounts);
             stmt.execute(users);
+            ensureLoanColumn(conn);
             ensureExtensionColumns(conn);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create tables: " + e.getMessage(), e);
         }
         seedAdmin();
+    }
+
+    /** Adds the {@code loan_balance} column to an existing {@code accounts} table that predates it. */
+    private void ensureLoanColumn(Connection conn) throws SQLException {
+        Set<String> existing = new HashSet<>();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(accounts)")) {
+            while (rs.next()) {
+                existing.add(rs.getString("name"));
+            }
+        }
+        if (!existing.contains("loan_balance")) {
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE accounts ADD COLUMN loan_balance REAL NOT NULL DEFAULT 0");
+            }
+        }
     }
 
     /** Adds any {@link AccountSchema} extension column missing from {@code accounts}. */
@@ -76,6 +97,8 @@ public class BankDatabase {
         for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
             if (!existing.contains(field.column())) {
                 try (Statement stmt = conn.createStatement()) {
+                    // Column name and type come from the fixed AccountSchema, not user input.
+                    //noinspection SqlSourceToSinkFlow
                     stmt.execute("ALTER TABLE accounts ADD COLUMN "
                             + field.column() + " " + field.sqlType().name());
                 }
@@ -109,8 +132,8 @@ public class BankDatabase {
     }
 
     public void insertAccount(Account account) {
-        StringBuilder columns = new StringBuilder("account_number, type, holder_name, balance, special");
-        StringBuilder placeholders = new StringBuilder("?,?,?,?,?");
+        StringBuilder columns = new StringBuilder("account_number, type, holder_name, balance, special, loan_balance");
+        StringBuilder placeholders = new StringBuilder("?,?,?,?,?,?");
         for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
             columns.append(", ").append(field.column());
             placeholders.append(",?");
@@ -119,7 +142,7 @@ public class BankDatabase {
         try (Connection conn = connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             bindAccount(ps, account);
-            bindExtensions(ps, account, 6);
+            bindExtensions(ps, account, 7);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to insert account: " + e.getMessage(), e);
@@ -127,7 +150,8 @@ public class BankDatabase {
     }
 
     public void updateAccount(Account account) {
-        StringBuilder sets = new StringBuilder("type = ?, holder_name = ?, balance = ?, special = ?");
+        StringBuilder sets = new StringBuilder(
+                "type = ?, holder_name = ?, balance = ?, special = ?, loan_balance = ?");
         for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
             sets.append(", ").append(field.column()).append(" = ?");
         }
@@ -138,22 +162,12 @@ public class BankDatabase {
             ps.setString(2, account.getAccountHolderName());
             ps.setDouble(3, account.getBalance());
             ps.setDouble(4, account.getSpecialAttribute());
-            int next = bindExtensions(ps, account, 5);
+            ps.setDouble(5, account.getLoanBalance());
+            int next = bindExtensions(ps, account, 6);
             ps.setString(next, account.getAccountNumber());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update account: " + e.getMessage(), e);
-        }
-    }
-
-    public void deleteAccount(String accountNumber) {
-        String sql = "DELETE FROM accounts WHERE account_number = ?";
-        try (Connection conn = connect();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, accountNumber);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete account: " + e.getMessage(), e);
         }
     }
 
@@ -171,6 +185,7 @@ public class BankDatabase {
                         rs.getString("holder_name"),
                         rs.getDouble("balance"),
                         rs.getDouble("special"));
+                account.setLoanBalance(rs.getDouble("loan_balance"));
                 for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
                     field.apply(account, rs.getString(field.column()));
                 }
@@ -188,6 +203,7 @@ public class BankDatabase {
         ps.setString(3, account.getAccountHolderName());
         ps.setDouble(4, account.getBalance());
         ps.setDouble(5, account.getSpecialAttribute());
+        ps.setDouble(6, account.getLoanBalance());
     }
 
     /** Binds each extension field starting at {@code startIndex}; returns the next free index. */

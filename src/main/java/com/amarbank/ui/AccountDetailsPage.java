@@ -31,7 +31,7 @@ import java.util.List;
 public class AccountDetailsPage extends JFrame {
 
     private static final String[] FIXED_COLUMNS =
-            {"Account Number", "Type", "Holder", "Balance", "Interest/Overdraft"};
+            {"Account Number", "Type", "Holder", "Balance", "Interest/Overdraft", "Loan"};
 
     private final BankManagement bank;
     private final JTextField accountField = new JTextField(14);
@@ -114,7 +114,8 @@ public class AccountDetailsPage extends JFrame {
                     a.getAccountType(),
                     a.getAccountHolderName(),
                     String.format("%.2f", a.getBalance()),
-                    String.format("%.2f", a.getSpecialAttribute())));
+                    String.format("%.2f", a.getSpecialAttribute()),
+                    String.format("%.2f", a.getLoanBalance())));
             for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
                 Object value = field.read(a);
                 row.add(value == null ? "" : value.toString());

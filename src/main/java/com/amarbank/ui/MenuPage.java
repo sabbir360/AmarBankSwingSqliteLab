@@ -32,7 +32,7 @@ public class MenuPage extends JFrame {
         header.setBorder(BorderFactory.createEmptyBorder(12, 0, 12, 0));
         add(header, BorderLayout.NORTH);
 
-        JPanel buttons = new JPanel(new GridLayout(6, 1, 10, 10));
+        JPanel buttons = new JPanel(new GridLayout(7, 1, 10, 10));
         buttons.setBorder(BorderFactory.createEmptyBorder(8, 24, 24, 24));
 
         JButton createButton = new JButton("Create Account");
@@ -40,6 +40,7 @@ public class MenuPage extends JFrame {
         JButton operationsButton = new JButton("Deposit / Withdraw / Transfer");
         JButton detailsButton = new JButton("Account Details");
         JButton specialButton = new JButton("Interest & Overdraft");
+        JButton loanButton = new JButton("Loans");
         JButton logoutButton = new JButton("Logout");
 
         createButton.addActionListener(this::onOpenCreateAccount);
@@ -47,6 +48,7 @@ public class MenuPage extends JFrame {
         operationsButton.addActionListener(this::onOpenOperations);
         detailsButton.addActionListener(this::onOpenAccountDetails);
         specialButton.addActionListener(this::onOpenSpecialFeatures);
+        loanButton.addActionListener(this::onOpenLoans);
         logoutButton.addActionListener(this::onLogout);
 
         buttons.add(createButton);
@@ -54,6 +56,7 @@ public class MenuPage extends JFrame {
         buttons.add(operationsButton);
         buttons.add(detailsButton);
         buttons.add(specialButton);
+        buttons.add(loanButton);
         buttons.add(logoutButton);
         add(buttons, BorderLayout.CENTER);
     }
@@ -76,6 +79,10 @@ public class MenuPage extends JFrame {
 
     private void onOpenSpecialFeatures(ActionEvent event) {
         new SpecialFeaturesPage(bank).setVisible(true);
+    }
+
+    private void onOpenLoans(ActionEvent event) {
+        new LoanPage(bank).setVisible(true);
     }
 
     private void onLogout(ActionEvent event) {

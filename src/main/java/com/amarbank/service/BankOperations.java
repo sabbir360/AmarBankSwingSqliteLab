@@ -25,10 +25,6 @@ public class BankOperations {
         account.setBalance(account.getBalance() + amount);
     }
 
-    public void deposit(String accountNumber, double amount) throws AccountNotFoundException {
-        deposit(bank.findAccount(accountNumber), amount);
-    }
-
     public void withdraw(Account account, double amount) throws InsufficientFundsException {
         if (amount <= 0) {
             throw new IllegalArgumentException("Withdrawal amount must be positive.");
@@ -41,11 +37,6 @@ public class BankOperations {
         account.setBalance(account.getBalance() - amount);
     }
 
-    public void withdraw(String accountNumber, double amount)
-            throws InsufficientFundsException, AccountNotFoundException {
-        withdraw(bank.findAccount(accountNumber), amount);
-    }
-
     public void transfer(String fromAccount, String toAccount, double amount)
             throws InsufficientFundsException, AccountNotFoundException {
         Account source = bank.findAccount(fromAccount);
@@ -55,6 +46,45 @@ public class BankOperations {
         }
         withdraw(source, amount);
         deposit(destination, amount);
+    }
+
+    /**
+     * Disburses a loan: credits the loan amount to the balance and records it as
+     * outstanding debt on the account.
+     */
+    public void takeLoan(Account account, double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Loan amount must be positive.");
+        }
+        account.setBalance(account.getBalance() + amount);
+        account.setLoanBalance(account.getLoanBalance() + amount);
+    }
+
+    /**
+     * Repays part or all of an outstanding loan from the account balance.
+     * The repayment is drawn from the available balance only (overdraft is not used).
+     */
+    public void repayLoan(Account account, double amount) throws InsufficientFundsException {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Repayment amount must be positive.");
+        }
+        if (account.getLoanBalance() <= 0) {
+            throw new IllegalArgumentException(
+                    "Account " + account.getAccountNumber() + " has no outstanding loan.");
+        }
+        if (amount > account.getLoanBalance()) {
+            throw new IllegalArgumentException(
+                    "Repayment exceeds the outstanding loan of "
+                            + String.format("%.2f", account.getLoanBalance()) + ".");
+        }
+        if (amount > account.getBalance()) {
+            throw new InsufficientFundsException(
+                    "Insufficient balance to repay " + String.format("%.2f", amount)
+                            + " in account " + account.getAccountNumber()
+                            + ". Available: " + String.format("%.2f", account.getBalance()) + ".");
+        }
+        account.setBalance(account.getBalance() - amount);
+        account.setLoanBalance(account.getLoanBalance() - amount);
     }
 
     /** Credits one month of interest to a savings account. Returns interest earned. */
