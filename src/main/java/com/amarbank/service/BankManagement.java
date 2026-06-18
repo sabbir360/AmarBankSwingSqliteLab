@@ -4,10 +4,13 @@ import com.amarbank.db.BankDatabase;
 import com.amarbank.exception.AccountNotFoundException;
 import com.amarbank.exception.InsufficientFundsException;
 import com.amarbank.model.Account;
+import com.amarbank.model.AccountSchema;
 import com.amarbank.model.CurrentAccount;
+import com.amarbank.model.FieldDescriptor;
 import com.amarbank.model.SavingsAccount;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controller class. Holds the {@code ArrayList<Account>} of active accounts,
@@ -30,12 +33,26 @@ public class BankManagement {
     }
 
     /** Creates an account with an auto-generated number and persists it. */
-    public Account createAccount(String type, String holderName, double initialDeposit, double special) {
+    public Account createAccount(String type, String holderName, double initialDeposit, double special,
+                                 Map<String, String> extras) {
         String number = generateAccountNumber(type);
         Account account = Account.create(type, number, holderName, initialDeposit, special);
+        applyExtras(account, extras);
         db.insertAccount(account);
         accounts.add(account);
         return account;
+    }
+
+    /** Applies extension-field values (e.g. email) from a key-to-input map onto the account. */
+    private void applyExtras(Account account, Map<String, String> extras) {
+        if (extras == null) {
+            return;
+        }
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            if (extras.containsKey(field.key())) {
+                field.apply(account, extras.get(field.key()));
+            }
+        }
     }
 
     public Account findAccount(String accountNumber) throws AccountNotFoundException {
@@ -89,8 +106,9 @@ public class BankManagement {
         return total;
     }
 
-    /** Updates holder name and type-specific attribute (interest rate or overdraft limit). */
-    public Account updateAccountInfo(String accountNumber, String holderName, double special)
+    /** Updates holder name, type-specific attribute (interest rate or overdraft limit), and extension fields. */
+    public Account updateAccountInfo(String accountNumber, String holderName, double special,
+                                     Map<String, String> extras)
             throws AccountNotFoundException {
         Account account = findAccount(accountNumber);
         account.setAccountHolderName(holderName);
@@ -104,6 +122,7 @@ public class BankManagement {
             }
             current.setOverdraftLimit(special);
         }
+        applyExtras(account, extras);
         db.updateAccount(account);
         return account;
     }

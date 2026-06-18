@@ -10,6 +10,8 @@ public abstract class Account {
     private String accountNumber;
     private String accountHolderName;
     private double balance;
+    private String email = "";
+    private String phoneNumber;
 
     protected Account(String accountNumber, String accountHolderName, double balance) {
         this.accountNumber = accountNumber;
@@ -21,9 +23,9 @@ public abstract class Account {
         return accountNumber;
     }
 
-    public void setAccountNumber(String accountNumber) {
+    /*public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
-    }
+    }*/
 
     public String getAccountHolderName() {
         return accountHolderName;
@@ -40,6 +42,17 @@ public abstract class Account {
     public void setBalance(double balance) {
         this.balance = balance;
     }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email == null ? "" : email;
+    }
+
+    public String getPhoneNumber() {return phoneNumber;}
+    public void setPhoneNumber(String phoneNumber) {this.phoneNumber = phoneNumber;}
 
     /**
      * Factory that builds the correct subclass from raw stored fields.
@@ -72,12 +85,6 @@ public abstract class Account {
      */
     public abstract boolean canWithdraw(double amount);
 
-    /** Row for accounts.csv: AccountNumber,AccountType,HolderName,Balance,SpecialAttribute */
-    public String toCsvRow() {
-        return accountNumber + "," + getAccountType() + "," + accountHolderName
-                + "," + balance + "," + getSpecialAttribute();
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(String.format(
@@ -89,6 +96,10 @@ public abstract class Account {
         if (this instanceof CurrentAccount current) {
             sb.append(String.format("%nOverdraft Used  : %.2f%nOverdraft Left  : %.2f",
                     current.getOverdraftUsed(), current.getRemainingOverdraft()));
+        }
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            Object value = field.read(this);
+            sb.append(String.format("%n%-15s: %s", field.header(), value == null ? "" : value));
         }
         return sb.toString();
     }

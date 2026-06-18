@@ -1,6 +1,8 @@
 package com.amarbank.db;
 
 import com.amarbank.model.Account;
+import com.amarbank.model.AccountSchema;
+import com.amarbank.model.FieldDescriptor;
 
 import java.io.File;
 import java.sql.Connection;
@@ -10,15 +12,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * Single SQLite persistence class for the whole app (HR-reference style).
- * Owns the connection, the {@code accounts} and {@code users} tables, and all
- * CRUD. To add a new persisted thing, add one method here.
- *
- * To export to CSV instead (old assignment format), iterate
- * {@link #getAllAccounts()} and write {@link Account#toCsvRow()} per line.
+ * Single SQLite persistence class for the whole app. Owns the connection, the
+ * {@code accounts} and {@code users} tables, and all CRUD. Extension fields
+ * from {@link AccountSchema} are added to the {@code accounts} table and bound
+ * automatically, so a new field needs no change here.
  */
 public class BankDatabase {
 
@@ -55,10 +57,30 @@ public class BankDatabase {
              Statement stmt = conn.createStatement()) {
             stmt.execute(accounts);
             stmt.execute(users);
+            ensureExtensionColumns(conn);
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create tables: " + e.getMessage(), e);
         }
         seedAdmin();
+    }
+
+    /** Adds any {@link AccountSchema} extension column missing from {@code accounts}. */
+    private void ensureExtensionColumns(Connection conn) throws SQLException {
+        Set<String> existing = new HashSet<>();
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(accounts)")) {
+            while (rs.next()) {
+                existing.add(rs.getString("name"));
+            }
+        }
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            if (!existing.contains(field.column())) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute("ALTER TABLE accounts ADD COLUMN "
+                            + field.column() + " " + field.sqlType().name());
+                }
+            }
+        }
     }
 
     private void seedAdmin() {
@@ -87,11 +109,17 @@ public class BankDatabase {
     }
 
     public void insertAccount(Account account) {
-        String sql = "INSERT INTO accounts (account_number, type, holder_name, balance, special) "
-                + "VALUES (?,?,?,?,?)";
+        StringBuilder columns = new StringBuilder("account_number, type, holder_name, balance, special");
+        StringBuilder placeholders = new StringBuilder("?,?,?,?,?");
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            columns.append(", ").append(field.column());
+            placeholders.append(",?");
+        }
+        String sql = "INSERT INTO accounts (" + columns + ") VALUES (" + placeholders + ")";
         try (Connection conn = connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             bindAccount(ps, account);
+            bindExtensions(ps, account, 6);
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to insert account: " + e.getMessage(), e);
@@ -99,15 +127,19 @@ public class BankDatabase {
     }
 
     public void updateAccount(Account account) {
-        String sql = "UPDATE accounts SET type = ?, holder_name = ?, balance = ?, special = ? "
-                + "WHERE account_number = ?";
+        StringBuilder sets = new StringBuilder("type = ?, holder_name = ?, balance = ?, special = ?");
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            sets.append(", ").append(field.column()).append(" = ?");
+        }
+        String sql = "UPDATE accounts SET " + sets + " WHERE account_number = ?";
         try (Connection conn = connect();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, account.getAccountType());
             ps.setString(2, account.getAccountHolderName());
             ps.setDouble(3, account.getBalance());
             ps.setDouble(4, account.getSpecialAttribute());
-            ps.setString(5, account.getAccountNumber());
+            int next = bindExtensions(ps, account, 5);
+            ps.setString(next, account.getAccountNumber());
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Failed to update account: " + e.getMessage(), e);
@@ -128,17 +160,21 @@ public class BankDatabase {
     /** Loads every stored account, rebuilding the correct subclass. */
     public List<Account> getAllAccounts() {
         List<Account> accounts = new ArrayList<>();
-        String sql = "SELECT account_number, type, holder_name, balance, special FROM accounts";
+        String sql = "SELECT * FROM accounts";
         try (Connection conn = connect();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             while (rs.next()) {
-                accounts.add(Account.create(
+                Account account = Account.create(
                         rs.getString("type"),
                         rs.getString("account_number"),
                         rs.getString("holder_name"),
                         rs.getDouble("balance"),
-                        rs.getDouble("special")));
+                        rs.getDouble("special"));
+                for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+                    field.apply(account, rs.getString(field.column()));
+                }
+                accounts.add(account);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to load accounts: " + e.getMessage(), e);
@@ -152,5 +188,20 @@ public class BankDatabase {
         ps.setString(3, account.getAccountHolderName());
         ps.setDouble(4, account.getBalance());
         ps.setDouble(5, account.getSpecialAttribute());
+    }
+
+    /** Binds each extension field starting at {@code startIndex}; returns the next free index. */
+    private int bindExtensions(PreparedStatement ps, Account account, int startIndex) throws SQLException {
+        int index = startIndex;
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            Object value = field.read(account);
+            if (field.sqlType() == FieldDescriptor.SqlType.REAL) {
+                ps.setDouble(index, value == null ? 0.0 : ((Number) value).doubleValue());
+            } else {
+                ps.setString(index, value == null ? null : value.toString());
+            }
+            index++;
+        }
+        return index;
     }
 }

@@ -1,6 +1,8 @@
 package com.amarbank.ui;
 
 import com.amarbank.model.Account;
+import com.amarbank.model.AccountSchema;
+import com.amarbank.model.FieldDescriptor;
 import com.amarbank.service.BankManagement;
 import com.amarbank.util.ValidationMessages;
 import com.amarbank.util.Validators;
@@ -16,6 +18,8 @@ import javax.swing.JTextField;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Feature 1: Account Creation. Pick a type (Savings/Current), enter the holder
@@ -32,13 +36,14 @@ public class CreateAccountPage extends JFrame {
     private final JTextField depositField = new JTextField(18);
     private final JTextField specialField = new JTextField(18);
     private final JLabel specialLabel = new JLabel("Interest Rate (%):");
+    private final Map<String, JTextField> extensionFields = new LinkedHashMap<>();
 
     public CreateAccountPage(BankManagement bank) {
         this.bank = bank;
 
         setTitle("Amar Bank - Create Account");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(440, 320);
+        setSize(440, 320 + 36 * AccountSchema.EXTENSION_FIELDS.size());
         setLocationRelativeTo(null);
 
         add(buildTypePanel(), BorderLayout.NORTH);
@@ -64,6 +69,12 @@ public class CreateAccountPage extends JFrame {
         form.addRow(0, "Holder Name:", nameField);
         form.addRow(1, "Initial Deposit:", depositField);
         form.addRow(2, specialLabel, specialField);
+        int row = 3;
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            JTextField input = new JTextField(18);
+            extensionFields.put(field.key(), input);
+            form.addRow(row++, field.label(), input);
+        }
         return form.panel();
     }
 
@@ -112,10 +123,21 @@ public class CreateAccountPage extends JFrame {
             return;
         }
 
+        Map<String, String> extras = new LinkedHashMap<>();
+        for (FieldDescriptor field : AccountSchema.EXTENSION_FIELDS) {
+            String raw = extensionFields.get(field.key()).getText().trim();
+            String error = field.validate(raw);
+            if (error != null) {
+                MessageDialogs.warn(this, error);
+                return;
+            }
+            extras.put(field.key(), raw);
+        }
+
         String type = savingsRadio.isSelected() ? "SAVINGS" : "CURRENT";
         try {
             Account account = bank.createAccount(type, name,
-                    Double.parseDouble(deposit), Double.parseDouble(special));
+                    Double.parseDouble(deposit), Double.parseDouble(special), extras);
             MessageDialogs.info(this, "Account created.\n\n" + account);
             dispose();
         } catch (RuntimeException ex) {

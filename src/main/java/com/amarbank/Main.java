@@ -1,6 +1,6 @@
 package com.amarbank;
 
-import com.amarbank.ui.LoginPage;
+import com.amarbank.ui.MenuPage;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -16,6 +16,6 @@ public class Main {
         } catch (Exception ignored) {
             // fall back to default look and feel
         }
-        SwingUtilities.invokeLater(() -> new LoginPage().setVisible(true));
+        SwingUtilities.invokeLater(() -> new MenuPage().setVisible(true));
     }
 }
